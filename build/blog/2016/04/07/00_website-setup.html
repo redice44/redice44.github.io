@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+  <head>
+
+  </head>
+  <body>
+<h1 id="setting-up-the-website">Setting up the Website</h1>
+<p>While planning the blog portion of my site, I quickly came to the realization that if I wanted to code my own blogging platform (which I do) then it will be quite a time investment. In the spirit of blogging that kind of delay wasn&#39;t appealing to me. So, I began thinking of some quick and dirty short term solutions. </p>
+<h3 id="initial-thoughts">Initial Thoughts</h3>
+<p>I originally began writing these posts in markdown, specifically GitHub&#39;s flavor of markdown. I started to poke around and see what kind of work process would be required in order to turn these around into a few simple pages. I know that <a href="https://jekyllrb.com/">Jekyll</a> is around and integrates nicely into GitHub&#39;s Pages, but as with many things for this website and other projects, I wanted to go through the experience of developing the tools that I use for the experience of developing finished products. </p>
+<p>I&#39;m going to try to have a single or very few related points in each post with hopefully a few overlying themes. </p>
+<h3 id="first-iteration">First Iteration</h3>
+<p><strong>Minimum Viable Product</strong></p>
+<ul>
+<li>Generate a set of static html pages from source md files to be hosted on Github&#39;s Pages.</li>
+<li>Create a landing page with access to the collection of posts and features the newest post. </li>
+<li>Simple styling</li>
+<li>Deployed to Github Pages</li>
+</ul>
+<h3 id="static-page-generation">Static Page Generation</h3>
+<ol>
+<li>Have a way to build all html files.</li>
+<li>Have a way to build a specific html file.</li>
+</ol>
+<p>The difference between these two build methods end up being how the files are watched through gulp. So, let&#39;s take a look at the heavy lifting in the process.</p>
+<pre><code class="lang-javascript">const fs = require(&#39;fs&#39;);
+const rename = require(&#39;gulp-rename&#39;);
+const tap = require(&#39;gulp-tap&#39;);
+const lazypipe = require(&#39;lazypipe&#39;);
+const marked = require(&#39;marked&#39;);
+
+/* ... */
+
+const mdTask = lazypipe()
+  .pipe(tap, _tapConcat)
+  .pipe(rename, { extname: &#39;.html&#39; });
+
+function _tapConcat(f, t) {
+  f.contents = Buffer.concat([
+    new Buffer(fs.readFileSync(&#39;./src/blog/templates/header.html&#39;, &#39;utf8&#39;)),
+    new Buffer(marked(f.contents.toString())),
+    new Buffer(fs.readFileSync(&#39;./src/blog/templates/footer.html&#39;, &#39;utf8&#39;)),          
+  ]);
+}
+
+/* ... */
+</code></pre>
+<p>Here we utilize lazypipe to create a reusable pipeline that pipes gulp-tap and gulp-rename to manipulate the markdown file. In tap we wrapping simple header and footer html files around the converted markdown file. Then we change the file extension to html.</p>
+<pre><code class="lang-javascript">function _build() {
+  return gulp.src(&#39;./src/blog/**/*.md&#39;, {base: &#39;./src/blog/&#39;})
+  .pipe(mdTask())
+  .pipe(gulp.dest(&#39;./build/&#39;));
+}
+
+// Watch for any template changes
+gulp.watch(&#39;./src/blog/templates/**/*.html&#39;, (e) =&gt; {
+  console.log(&#39;Template Updated: Building all md files.&#39;);
+  _build();
+});
+
+// Update specific markdown file
+gulp.watch(&#39;./src/blog/**/*.md&#39;, (e) =&gt; {
+  console.log(`Writing ${e.path}`);
+
+  gulp.src(e.path, { base: &#39;./src/blog/&#39; })
+    .pipe(mdTask())
+    .pipe(gulp.dest(&#39;./build/&#39;));
+});
+
+gulp.task(&#39;build&#39;, _build);
+</code></pre>
+<p>The _build function takes all markdown files in the blog and processes them with our mdTask pipeline and writes them to the build directory. This gets called anytime a template file gets changed or we just want to build the project. The watch on all markdown files only processes the specific files that was changed. This is accomplished by using <code>e.path</code> to get the file that triggered the event.</p>
+<p>So far, so good. This post was generated using this process. Next up is getting a main page up and running. </p>
+<p>Files snapshot</p>
+<ul>
+<li><a href="https://github.com/redice44/redice44.github.io/blob/master/src/blog/2016/04/07/gulpfile.js">gulpfile.js</a></li>
+</ul>
+  </body>
+</html>
