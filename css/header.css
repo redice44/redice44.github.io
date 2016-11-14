@@ -1,0 +1,38 @@
+/* 
+ * Accent: #A907B8
+ */
+
+#navigation {
+
+}
+
+#navigation ul {
+  /* Dom */
+  height: 50px;
+
+  /* Colors */
+  background-color: #110414;
+  border-bottom: 1px solid #A907B8;
+  color: #BABABA;
+
+  /* Children */
+  display: flex;
+  justify-content: space-around;
+}
+
+#navigation li {
+  flex-grow: 1;
+}
+
+#navigation a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  color: #BABABA;
+}
+
+#navigation a:hover {
+  color: #A907B8;
+}
